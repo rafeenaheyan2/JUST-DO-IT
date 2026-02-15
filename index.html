@@ -4,34 +4,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>লগইন পোর্টাল</title>
+    <title>Farm Management Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Hind Siliguri', sans-serif;
-        }
-        .glass-morphism {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
     "react/": "https://esm.sh/react@^19.2.4/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.39.0"
+    "react": "https://esm.sh/react@^19.2.4"
   }
 }
 </script>
 </head>
-<body class="bg-slate-50 text-slate-900">
-    <div id="root"></div>
-    <!-- টাইপস্ক্রিপ্ট এন্ট্রি পয়েন্ট লোড করা হচ্ছে -->
-    <script type="module" src="index.tsx"></script>
+<body class="bg-slate-950 font-['Hind_Siliguri']">
+
+    <!-- LOGIN VIEW -->
+    <section id="login-view" class="min-h-screen flex items-center justify-center p-4">
+        <div class="glass-container w-full max-w-4xl bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-white/20">
+            <!-- Left Branding -->
+            <div class="hidden md:flex md:w-1/2 bg-slate-900 p-12 flex-col justify-between text-white relative">
+                <div class="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-blue-900/20"></div>
+                <div class="relative z-10">
+                    <div class="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center mb-8 shadow-xl shadow-indigo-500/30">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h1 class="text-4xl font-black leading-tight">অত্যাধুনিক খামার <br>ম্যানেজমেন্ট পোর্টালে <br>স্বাগতম।</h1>
+                </div>
+                <div class="relative z-10 flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" class="w-12 h-12 rounded-full border border-white/20" alt="Admin">
+                    <div>
+                        <p class="text-xs font-black uppercase tracking-widest">RAFEE NAHEYAN</p>
+                        <p class="text-[10px] text-indigo-300 font-bold uppercase">System Admin</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Form -->
+            <div class="flex-1 p-8 sm:p-12 bg-white flex flex-col justify-center">
+                <div class="text-center mb-10">
+                    <h2 class="text-2xl font-black text-slate-800">ফিরে আসায় স্বাগতম</h2>
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-2">আপনার অ্যাকাউন্টে লগইন করুন</p>
+                </div>
+
+                <form id="login-form" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ইউজারনেম বা ইমেল</label>
+                        <input type="text" id="login-identifier" required class="w-full px-5 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 focus:ring-4 focus:ring-indigo-500/5 outline-none font-bold text-sm" placeholder="1111@mail.com">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">পাসওয়ার্ড</label>
+                        <input type="password" id="login-password" required class="w-full px-5 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 focus:ring-4 focus:ring-indigo-500/5 outline-none font-bold text-sm" placeholder="••••••••">
+                    </div>
+
+                    <!-- Captcha -->
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">নিরাপত্তা কোড</label>
+                        <div class="flex items-center gap-3">
+                            <div id="captcha-display" class="bg-white border border-indigo-100 px-4 py-2.5 rounded-xl font-mono text-lg text-indigo-600 font-black italic shadow-sm">00000</div>
+                            <input type="text" id="captcha-input" maxlength="5" required class="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 text-center font-bold text-lg" placeholder="-----">
+                            <button type="button" onclick="generateCaptcha()" class="p-2.5 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-indigo-600 transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-4 bg-indigo-600 text-white font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all">লগইন করুন</button>
+                </form>
+
+                <div class="mt-8 pt-6 border-t border-slate-50 text-center space-y-4">
+                    <button onclick="alert('অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।')" class="text-[10px] text-slate-400 font-bold hover:text-indigo-600 uppercase tracking-widest">পাসওয়ার্ড ভুলে গেছেন?</button>
+                    <div class="flex justify-center gap-4">
+                        <a href="#" class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></a>
+                        <a href="#" class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-green-600 hover:text-white transition-all"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DASHBOARD VIEW -->
+    <section id="dashboard-view" class="hidden min-h-screen flex flex-col bg-slate-50">
+        <!-- Header -->
+        <header class="bg-white px-6 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 z-40">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </div>
+                <div>
+                    <h2 id="view-title" class="text-lg font-black text-slate-800">অ্যাডমিন প্যানেল</h2>
+                    <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest">খামার ম্যানেজমেন্ট পোর্টাল</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="pending-badge" class="hidden relative cursor-pointer" onclick="setActiveTab('ইউজার')">
+                    <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 animate-pulse">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    </div>
+                    <span id="pending-count" class="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white">0</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <p id="user-name" class="text-xs font-black text-slate-800">Admin</p>
+                        <p id="user-role" class="text-[9px] text-indigo-500 font-black uppercase tracking-widest">Super Admin</p>
+                    </div>
+                    <img id="user-photo" src="" class="w-9 h-9 rounded-xl border border-slate-100 shadow-sm" alt="Profile">
+                </div>
+                <button onclick="logout()" class="px-3 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-black hover:bg-red-600 hover:text-white transition-all">লগআউট</button>
+            </div>
+        </header>
+
+        <div class="flex-1 flex flex-col md:flex-row h-[calc(100vh-68px)]">
+            <!-- Sidebar -->
+            <aside class="w-full md:w-60 bg-white border-r border-slate-100 p-4 flex md:flex-col gap-2 overflow-x-auto md:overflow-y-auto">
+                <nav id="sidebar-nav" class="flex md:flex-col gap-1 w-full"></nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6 lg:p-10 overflow-y-auto" id="main-content">
+                <!-- Dynamic Content Loads Here -->
+            </main>
+        </div>
+    </section>
+
+    <!-- MODALS -->
+    
+    <!-- Welcome Modal -->
+    <div id="welcome-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-[3rem] p-10 max-w-sm text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
+            <div class="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-bounce shadow-xl">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h3 class="text-2xl font-black text-slate-800 mb-2">লগইন সফল!</h3>
+            <p id="welcome-message" class="text-xs text-slate-400 font-bold mb-8 uppercase tracking-widest leading-relaxed"></p>
+            <button onclick="hideWelcomeModal()" class="w-full py-4 bg-indigo-600 text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl hover:bg-indigo-700 active:scale-95 transition-all">পোর্টালে প্রবেশ করুন</button>
+        </div>
+    </div>
+
+    <!-- Sale Form Modal -->
+    <div id="sale-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+        <div class="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl relative overflow-hidden">
+            <div class="p-8 sm:p-10">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div>
+                    <div><h3 class="text-xl font-black text-slate-800">নতুন সেল এন্ট্রি</h3><p id="sale-user-label" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">কাস্টমার প্রোফাইল</p></div>
+                </div>
+                <form id="sale-form" class="space-y-4">
+                    <input type="hidden" id="sale-user-id">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">তারিখ</label><input type="date" id="sale-date" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"></div>
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">পরিমাণ (কেজি)</label><input type="number" step="0.1" id="sale-qty" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm" oninput="calculateSale()"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">দাম (৳)</label><input type="number" id="sale-price" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm" oninput="calculateSale()"></div>
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">আদায় (৳)</label><input type="number" id="sale-received" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm" oninput="calculateSale()"></div>
+                    </div>
+                    
+                    <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-3">
+                        <div class="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest"><span>আজকের মোট:</span><span id="sale-total-display" class="text-slate-800 text-sm">৳ ০</span></div>
+                        <div class="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest"><span>আগের <span id="prev-balance-type">ব্যালেন্স</span>:</span><span id="sale-prev-display" class="text-slate-800 text-sm">৳ ০</span></div>
+                        <div class="h-px bg-slate-200"></div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-black text-indigo-600 uppercase tracking-widest">চূড়ান্ত <span id="final-balance-type">ব্যালেন্স</span>:</span>
+                            <span id="sale-final-display" class="text-xl font-black text-slate-900">৳ ০</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="closeModal('sale-modal')" class="flex-1 py-4 bg-slate-100 text-slate-400 font-black uppercase text-[10px] tracking-widest rounded-2xl transition-all">বাতিল</button>
+                        <button type="submit" class="flex-[2] py-4 bg-indigo-600 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95">Sale Confirm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Customer Modal -->
+    <div id="customer-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+        <div class="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl relative overflow-hidden">
+            <div class="p-8 sm:p-10">
+                <h3 class="text-xl font-black text-slate-800 mb-8">নতুন কাস্টমার যোগ করুন</h3>
+                <form id="customer-form" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">পূর্ণ নাম</label><input type="text" id="cust-name" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"></div>
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">ইউজারনেম</label><input type="text" id="cust-user" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">ফোন</label><input type="text" id="cust-phone" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"></div>
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">পাসওয়ার্ড</label><input type="text" id="cust-pass" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">দৈনিক দুধ (কেজি)</label><input type="number" id="cust-qty" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"></div>
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">প্রতি কেজি দাম</label><input type="number" id="cust-price" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm" value="80"></div>
+                    </div>
+                    <div class="space-y-1"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">ইমেল</label><input type="email" id="cust-email" required class="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"></div>
+
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="closeModal('customer-modal')" class="flex-1 py-4 bg-slate-100 text-slate-400 font-black uppercase text-[10px] tracking-widest rounded-2xl transition-all">বাতিল</button>
+                        <button type="submit" class="flex-[2] py-4 bg-indigo-600 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95">কাস্টমার তৈরি করুন</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Photo View Modal Overlay -->
+    <div id="photo-overlay" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-xl transition-all duration-500">
+        <button onclick="closePhotoOverlay()" class="absolute top-6 right-6 w-12 h-12 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-red-500 transition-all">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div class="max-w-2xl w-full text-center">
+            <img id="overlay-img" src="" class="w-full max-h-[70vh] object-contain rounded-3xl shadow-2xl border border-white/10 mb-6" alt="Full Preview">
+            <div id="overlay-info" class="bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-md">
+                <p class="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-2">AI Processing Results</p>
+                <div class="flex justify-center gap-8">
+                    <div><p class="text-[8px] text-white/50 uppercase tracking-widest mb-1">Gender</p><p id="overlay-gender" class="text-white font-black uppercase tracking-widest">Detection...</p></div>
+                    <div><p class="text-[8px] text-white/50 uppercase tracking-widest mb-1">Scale</p><p class="text-white font-black uppercase tracking-widest">Passport (4:5)</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
