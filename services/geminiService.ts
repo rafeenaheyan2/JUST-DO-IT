@@ -16,7 +16,15 @@ const SYSTEM_INSTRUCTION = `
 
 export async function getHelpResponse(userInput: string): Promise<string> {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // API Key চেক করা হচ্ছে যাতে process undefined থাকলেও অ্যাপ ক্র্যাশ না করে
+    const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : '';
+    
+    if (!apiKey) {
+      console.warn("API Key missing in environment");
+      return "দুঃখিত, বর্তমানে এআই সহকারীটি কনফিগার করা নেই। অনুগ্রহ করে অ্যাডমিনের সাথে যোগাযোগ করুন।";
+    }
+
+    const ai = new GoogleGenAI({ apiKey: apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: userInput,
